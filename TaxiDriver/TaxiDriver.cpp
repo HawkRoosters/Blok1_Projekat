@@ -8,8 +8,9 @@
 int main()
 {
 
-	char messageToSend[] = "Nalazim se na ...";
-	//ClientRequest(messageToSend);
+	char messageToSend[] = "Lokacija vozaca: (23,42)";
+	ClientRequest(messageToSend);
+
 
 	getchar();
 	return 0;

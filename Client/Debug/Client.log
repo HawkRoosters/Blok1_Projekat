@@ -1,2 +1,6 @@
 ﻿  Client.cpp
+k:\ikp2020\taxi\common\tcpfunctions.h(47): warning C4474: 'printf' : too many arguments passed for format string
+  k:\ikp2020\taxi\common\tcpfunctions.h(47): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+k:\ikp2020\taxi\common\tcpfunctions.h(259): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+k:\ikp2020\taxi\common\tcpfunctions.h(282): warning C4566: character represented by universal-character-name '\u010D' cannot be represented in the current code page (1252)
   Client.vcxproj -> K:\ikp2020\Taxi\Debug\Client.exe

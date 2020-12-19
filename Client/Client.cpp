@@ -7,7 +7,7 @@
 int main()
 {
 
-    char messageToSend[] = "Molim Vas, jedno vozilo na ...";
+    char messageToSend[] = "Adresa klijenta: (78,23)";
 	ClientRequest(messageToSend);
 
 
