@@ -13,6 +13,9 @@
 #include <winSock2.h>
 #include <ws2tcpip.h>
 
+#include <time.h>
+#include <string.h>
+
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
@@ -41,11 +44,10 @@ char* GetMessageFromClient()
 	SOCKET acceptedSocket = INVALID_SOCKET;
 
 	int iResult;
-	char recvbuf[512];
+	char recvbuf[7];
 
 	if (!InitializeWindowsSockets())
 		printf("Initialize socket, failed.", WSAGetLastError());
-	//return;
 
 	addrinfo *resultingAddress = NULL;
 	addrinfo hints;
@@ -61,7 +63,6 @@ char* GetMessageFromClient()
 	{
 		printf("get addrinfo failed, error: %d\n", iResult);
 		WSACleanup();
-		//return;
 	}
 
 	listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -70,7 +71,6 @@ char* GetMessageFromClient()
 		printf("socket failed, error: %d\n", WSAGetLastError());
 		freeaddrinfo(resultingAddress);
 		WSACleanup();
-		//return;
 	}
 
 	iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
@@ -80,7 +80,6 @@ char* GetMessageFromClient()
 		freeaddrinfo(resultingAddress);
 		closesocket(listenSocket);
 		WSACleanup();
-	//	return;
 	}
 
 	freeaddrinfo(resultingAddress);
@@ -91,7 +90,6 @@ char* GetMessageFromClient()
 		printf("listen failed, error: %d\n", WSAGetLastError());
 		closesocket(listenSocket);
 		WSACleanup();
-		//return;
 	}
 
 	printf("Server initialized, waiting for clients.\n");
@@ -102,14 +100,23 @@ char* GetMessageFromClient()
 		printf("accept failed, error: %d\n", WSAGetLastError());
 		closesocket(listenSocket);
 		WSACleanup();
-		//return;
 	}
 
-	iResult = recv(acceptedSocket, recvbuf, 512, 0);
+
+	iResult = recv(acceptedSocket, recvbuf, 7, 0);
+
+	char *ret = (char*)malloc(7 * sizeof(char));
+	for (int i = 0; i < 7; i++) 
+	{
+		ret[i] = recvbuf[i];
+
+		if (recvbuf[i] == '\0')
+			break;
+	}
 
 	if (iResult > 0) 
 	{			
-		printf("Message received from client: %s\n", recvbuf);
+		printf("Message received from client: %s\n", ret);
 	}
 	else if (iResult == 0)
 	{
@@ -130,20 +137,64 @@ char* GetMessageFromClient()
 		printf("shutdown failed, error: %d\n", WSAGetLastError());
 		closesocket(acceptedSocket);
 		WSACleanup();
-	//	return;
 	}
 
-	char *ret = (char*)malloc(512 * sizeof(char));
-	for (int i = 0; i < 512; i++)
-		ret[i] = recvbuf[i];
 
 	return ret;
 }
 
 
+char* RandomLocation()
+{
+	char *ret = (char*)malloc(7 * sizeof(char));
+	
+	int x = rand() % 100;
+	int y = rand() % 100;
+
+	ret[0] = '(';
+	if (x > 9)
+	{
+		ret[1] = x / 10 + 48;
+		ret[2] = x % 10 + 48;
+		ret[3] = ',';
+		if (y > 9)
+		{
+			ret[4] = y / 10 + 48;
+			ret[5] = y % 10 + 48;
+			ret[6] = ')';
+			ret[7] = '\0';
+		}
+		else
+		{
+			ret[4] = y + 48;
+			ret[5] = ')';
+			ret[6] = '\0';
+		}
+	}
+	else
+	{
+		ret[1] = x + 48;
+		ret[2] = ',';
+		if (y > 9)
+		{
+			ret[3] = y / 10 + 48;
+			ret[4] = y % 10 + 48;
+			ret[5] = ')';
+			ret[6] = '\0';
+		}
+		else
+		{
+			ret[3] = y + 48;
+			ret[4] = ')';
+			ret[5] = '\0';
+		}
+	}
+
+	return ret;
+}
 
 
-void ClientRequest(char input[])
+void ClientRequest(int dID)
 {
 	SOCKET connectSocket = INVALID_SOCKET;
 	int iResult;
@@ -171,7 +222,30 @@ void ClientRequest(char input[])
 		WSACleanup();
 	}
 
-	iResult = send(connectSocket, input, (int)strlen(input) + 1, 0);
+	char driversID[10];
+	if ((dID > 0) && (dID < 10))
+	{
+		driversID[0] = dID + 48;
+		driversID[1] = 'e';
+	}
+	else
+	{
+		if (dID >= 10) 
+		{
+			driversID[0] = dID / 10 + 48;
+			driversID[1] = dID % 10 + 48;
+		}
+	}
+
+	for (int i = 2; i < 10; i++)
+		driversID[i] = RandomLocation()[i-2];
+
+	if (dID == 0)
+		iResult = send(connectSocket, RandomLocation(), (int)strlen(RandomLocation()) + 1, 0);
+	else
+		iResult = send(connectSocket, driversID, (int)strlen(driversID) + 1, 0 );
+
+
 	if (iResult == SOCKET_ERROR)
 	{
 		printf("send failed, error: %d\n", WSAGetLastError());
@@ -229,29 +303,56 @@ location GetLocation(char message[])
 }
 
 
-driver* Add(driver *head,  int x, int y) 
+driver* AllDrivers()
 {
-	driver *newDriver = NULL;
-	driver *temp = head;
-	int d = 0;
+	driver* head = NULL;
+	driver* newDriver = NULL;
+	driver* p = NULL;
 
-	newDriver = (driver*)malloc(sizeof(driver));
-	newDriver->loc.x = x;
-	newDriver->loc.y = y;
-	newDriver->available = true;
-	newDriver->next = NULL;
-
-	while (temp->next != NULL) 
+	for (int i = 1; i < 5; i++)
 	{
-		temp = temp->next;
-		d++;
-	}
+		newDriver = (driver*)malloc(sizeof(driver));
+		newDriver->ID = i;
 
-	newDriver->ID = d;
-	temp->next = newDriver;
+		char stajaliste[] = "(50,50)";
+		newDriver->loc = GetLocation(stajaliste);
+		newDriver->available = true;
+		newDriver->next = NULL;
+
+		if (head == NULL)
+			head = newDriver;
+		else
+		{
+			p = head;
+			while (p->next != NULL)
+				p = p->next;
+
+			p->next = newDriver;
+		}
+	}
 
 	return head;
 }
+
+
+driver* UpdateDriversLocation(int id, location newLoc) 
+{
+	driver* head = AllDrivers();
+	driver* temp = head;
+	int i = 1;
+
+	do {
+		if (i == id) 
+			temp->loc = newLoc;
+
+		temp = temp->next;
+		i++;
+	} while (temp != NULL);
+
+	return head;
+}
+
+
 
 
 float destination(location driversL, location clientsL) 
