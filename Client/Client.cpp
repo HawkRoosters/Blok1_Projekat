@@ -4,14 +4,26 @@
 #include "TCPfunctions.h"
 
 
+DWORD WINAPI ClientToService(LPVOID lpParam)
+{
+	ClientsRequest();
+
+	return 0;
+}
+
 int main()
 {
 
-    char messageToSend[] = "Adresa klijenta: (78,23)";
-//	ClientRequest(messageToSend);
+	DWORD request;
+	HANDLE hRequest;
 
 
-	getchar();
+	hRequest = CreateThread(NULL, 0, &ClientToService, NULL, 0, &request);
+	CloseHandle(hRequest);
+
+
+	Sleep(5000);
+	//getchar();
 	return 0;
 }
 

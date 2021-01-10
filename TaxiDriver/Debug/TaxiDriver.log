@@ -1,8 +1,4 @@
 ﻿  TaxiDriver.cpp
-k:\ikp2020\taxi\common\tcpfunctions.h(50): warning C4474: 'printf' : too many arguments passed for format string
-  k:\ikp2020\taxi\common\tcpfunctions.h(50): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
-k:\ikp2020\taxi\common\tcpfunctions.h(360): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-k:\ikp2020\taxi\common\tcpfunctions.h(383): warning C4566: character represented by universal-character-name '\u010D' cannot be represented in the current code page (1252)
-k:\ikp2020\taxi\taxidriver\taxidriver.cpp(25): warning C4101: 'driverClient1': unreferenced local variable
-k:\ikp2020\taxi\taxidriver\taxidriver.cpp(26): warning C4101: 'hDriver1': unreferenced local variable
+k:\ikp2020\taxi\common\tcpfunctions.h(196): warning C4474: 'printf' : too many arguments passed for format string
+  k:\ikp2020\taxi\common\tcpfunctions.h(196): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
   TaxiDriver.vcxproj -> K:\ikp2020\Taxi\Debug\TaxiDriver.exe

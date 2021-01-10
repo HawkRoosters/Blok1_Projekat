@@ -4,43 +4,26 @@
 
 #include "TCPfunctions.h"
 
-CRITICAL_SECTION dcs;
 
 DWORD WINAPI DriversAnswer(LPVOID lpParam)
 {
-	int id = *(int*)lpParam;
-
-	EnterCriticalSection(&dcs);
-		ClientRequest(id);
-		printf("moj ID je %d . \n", id);
-	LeaveCriticalSection(&dcs);
+	DriversMessage();
 
 	return 0;
 }
 
 
+
 int main()
 {
-
-	DWORD driverClient1, driverClient2;
-	HANDLE hDriver1, hDriver2;
-
-	int id1 = 1;
-	int id2 = 2;
-
-	InitializeCriticalSection(&dcs);
-
-//	hDriver1 = CreateThread(NULL, 0, &DriversAnswer, &id1, 0, &driverClient1);
-	hDriver2 = CreateThread(NULL, 0, &DriversAnswer, &id2, 0, &driverClient2);
-
-	getchar();
+	DWORD answer;
+	HANDLE hAnswer;
 
 
-//	CloseHandle(hDriver1);
-	CloseHandle(hDriver2);
-	DeleteCriticalSection(&dcs);
+	hAnswer = CreateThread(NULL, 0, &DriversAnswer, NULL, 0, &answer);
+	CloseHandle(hAnswer);
+	//getchar();
+	Sleep(5000);
 
-
-	getchar();
 	return 0;
 }
