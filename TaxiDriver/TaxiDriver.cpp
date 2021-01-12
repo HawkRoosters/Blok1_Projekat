@@ -7,7 +7,7 @@
 
 DWORD WINAPI DriversAnswer(LPVOID lpParam)
 {
-	DriversMessage();
+	Answer(NULL);
 
 	return 0;
 }
@@ -22,7 +22,7 @@ int main()
 
 	hAnswer = CreateThread(NULL, 0, &DriversAnswer, NULL, 0, &answer);
 	CloseHandle(hAnswer);
-	//getchar();
+
 	Sleep(5000);
 
 	return 0;

@@ -3,7 +3,6 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 
-//#define __STDC_WANT_LIB_EXT1__
 
 #include <iostream>
 
@@ -46,6 +45,7 @@ char* RandomLocation()
 {
 	char *ret = (char*)malloc(9 * sizeof(char));
 
+	srand((unsigned int)time(NULL));
 	int x = rand() % 100;
 	int y = rand() % 100;
 
@@ -177,7 +177,7 @@ bool InitializeWindowsSockets()
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
-		printf("WSAStartup faild %d\n", WSAGetLastError());
+		printf("WSAStartup failed %d\n", WSAGetLastError());
 		return false;
 	}
 
@@ -186,7 +186,7 @@ bool InitializeWindowsSockets()
 
 
 
-void DriversMessage()
+void Answer(char* serviceToClient)
 {
 	SOCKET connectSocket = INVALID_SOCKET;
 	int iResult;
@@ -206,7 +206,10 @@ void DriversMessage()
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	serverAddress.sin_port = htons(27016);
+	if ( serviceToClient )
+		serverAddress.sin_port = htons(27018);
+	else
+		serverAddress.sin_port = htons(27017);
 
 	iResult = connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress));
 	if (iResult == SOCKET_ERROR)
@@ -216,27 +219,44 @@ void DriversMessage()
 		WSACleanup();
 	}
 
+	
 
-	driver *theDriver = AllDrivers();
-
-	while(theDriver != NULL)
+	if (serviceToClient != NULL) 
 	{
-		 theDriver->loc = GetLocation(RandomLocation());
+		char *message = serviceToClient;
 
-		 iResult = send(connectSocket, (char*)theDriver, (int)sizeof(driver), 0);
-		 if (iResult == SOCKET_ERROR)
-		 {
+		iResult = send(connectSocket, message, (int)strlen(message) + 1, 0);
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("send failed, error: %d\n", WSAGetLastError());
+			closesocket(connectSocket);
+			WSACleanup();
+		}
+	}
+	else 
+	{
+		driver *theDriver = AllDrivers();
+
+		while (theDriver != NULL)
+		{
+			theDriver->loc = GetLocation(RandomLocation());
+
+			iResult = send(connectSocket, (char*)theDriver, (int)sizeof(driver), 0);
+			if (iResult == SOCKET_ERROR)
+			{
 				printf("send failed, error: %d\n", WSAGetLastError());
 				closesocket(connectSocket);
 				WSACleanup();
-		 }
+			}
 
 
-		printf("Vozac sa ID = %d prijavljuje svoju novu lokaciju: (%d,%d) \n", theDriver->ID, theDriver->loc.x, theDriver->loc.y);
-		
-		theDriver = theDriver->next;
-		Sleep(500);
+			printf("Vozac sa ID = %d prijavljuje svoju novu lokaciju: (%d,%d) \n", theDriver->ID, theDriver->loc.x, theDriver->loc.y);
+
+			theDriver = theDriver->next;
+			Sleep(1000);
+		}
 	}
+
 
 
 	iResult = shutdown(connectSocket, SD_BOTH);
@@ -255,7 +275,7 @@ void DriversMessage()
 
 
 
-void ClientsRequest()
+void ClientsMessage(int ID)
 {
 	SOCKET connectSocket = INVALID_SOCKET;
 	int iResult;
@@ -274,7 +294,7 @@ void ClientsRequest()
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	serverAddress.sin_port = htons(27016);
+    serverAddress.sin_port = htons(27016);
 
 	if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
 	{
@@ -283,11 +303,13 @@ void ClientsRequest()
 		WSACleanup();
 	}
 
-		
-	char *loc = RandomLocation();
-	printf("Dobar dan. Moze li jedno vozilo na %s?", loc);
-	iResult = send(connectSocket, loc, (int)strlen(loc) + 1, 0);
+
+
+		char *loc = RandomLocation();
+		printf("Dobar dan. Moze li jedno vozilo na %s? \n", loc);
+		iResult = send(connectSocket, loc, (int)strlen(loc) + 1, 0);
 	
+
 
 	if (iResult == SOCKET_ERROR)
 	{
@@ -313,9 +335,9 @@ double destination(location driversL, location clientsL)
 }
 
 
-driver* Find(driver *head, location cl, int** min) 
+void Find(driver *head, location cl, int** min, driver** ret) 
 {
-	driver* ret = NULL;
+	*ret = NULL;
 	double dest = destination(head->loc, cl);
 	
 	driver* temp = head;
@@ -325,23 +347,25 @@ driver* Find(driver *head, location cl, int** min)
 		if (temp->available) 
 		{
 			if( destination(temp->loc, cl) <= dest )
-				ret = temp;
+				*ret = temp;
 		}
 
 		temp = temp->next;
 	}
 
+
 	if (ret == NULL)
-		printf("Trenutno nema dostupnih vozaca.");
+		printf("Trenutno nema dostupnih vozaca. \n");
 	else 
 	{
-		ret->available = false;
-		ret->loc = cl;
+		(*ret)->available = false;
+		(*ret)->loc = cl;
 		// 80km/h == 4/3 km/min ...  t = dest/(4/3)== 3dest/4 min
-		//+ ~ 10s po km stajanje na semaforima 
-		*(*min) = (int)((3*dest/4) + 0.6*dest);
-		printf("Najblizi je vozac %d, %f km, treba mu %.0f minuta \n", ret->ID, dest, (float)(*(*min)) );
+		//+ ~ 30s po km stajanje na semaforima 
+		dest = dest / 10; //  realnije za rastojanja kroz grad, formulom se dobiju sati umsto min..
+		*(*min) = (int)((3*dest/4) + 0.5*dest);
+		printf("Najblizi je vozac %d, na %.2f km, treba mu %.0f minuta \n", (*ret)->ID, dest, (float)(*(*min)) );
 	}
 
-	return ret;
 }
+
