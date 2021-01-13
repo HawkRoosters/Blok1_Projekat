@@ -1,1 +1,6 @@
-﻿
+﻿  TaxiService.cpp
+k:\ikp2020\taxi\common\tcpfunctions.h(197): warning C4474: 'printf' : too many arguments passed for format string
+  k:\ikp2020\taxi\common\tcpfunctions.h(197): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+k:\ikp2020\taxi\taxiservice\taxiservice.cpp(122): warning C4474: 'printf' : too many arguments passed for format string
+  k:\ikp2020\taxi\taxiservice\taxiservice.cpp(122): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  TaxiService.vcxproj -> K:\ikp2020\Taxi\Debug\TaxiService.exe

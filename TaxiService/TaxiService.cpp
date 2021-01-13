@@ -91,15 +91,14 @@ void ServiceToDrivers(driver** retDriver)
 			ret = UpdateDriversLocation(ret, theDriver->ID, theDriver->loc);
 			*(*retDriver) = *ret;
 		}
-		else if (iResult == 0)
-		{
-			closesocket(driversSocket);
-			printf("\nTaxi service je proverio vozace. \n");
-			break;
-		}
 		else
 		{
-			printf("recv failed, error: %d\n", WSAGetLastError());
+			if(iResult == 0)
+				printf("\nTaxi service je proverio vozace. \n");
+			else 
+				printf("recv failed, error: %d\n", WSAGetLastError());
+			
+			
 			closesocket(driversSocket);
 			break;
 		}
@@ -153,7 +152,7 @@ void ServiceToClients()
 	iResult = setsockopt(listenClientsSocket, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (char *)&bOptVal, bOptLen);
 	if (iResult == SOCKET_ERROR) {
 		printf("setsockopt for SO_CONDITIONAL_ACCEPT failed with error: %u\n", WSAGetLastError());
-	}
+	} 
 
 	unsigned long  nonBlockingMode = 1;
 	if (ioctlsocket(listenClientsSocket, FIONBIO, &nonBlockingMode) != 0)
@@ -169,7 +168,7 @@ void ServiceToClients()
 	}
 
 
-	printf("Taxi. Izvolite? \n");
+	printf("Taxi. Izvolite? \n\n");
 
 
 	FD_SET set;
@@ -222,7 +221,6 @@ void ServiceToClients()
 				index++;
 				printf("Uspostavljena veza sa %d. kljentom. \n", index);
 			}
-
 		}
 		else 
 		{
@@ -234,7 +232,7 @@ void ServiceToClients()
 					if (iResult > 0)
 					{
 						buffer[iResult] = '\0';
-						printf("Klijent %d se javlja sa: %s\n", i+1, buffer); 						
+						printf("\nNovi klijent se javlja sa: %s\n",  buffer); 						
 
 						printf("\nTaxi service trazi trenutne lokacije vozaca... \n");
 
@@ -252,7 +250,6 @@ void ServiceToClients()
 						printf("Lokacija kojoj trazim najblizu, : (%d,%d)\n", loc.x, loc.y);
 						Find(theFirst, loc, &min, &theDriver);
 				
-
 
 						if (theDriver == NULL) 
 						{
@@ -285,38 +282,37 @@ void ServiceToClients()
 							} 
 								
 							Answer(answer);
+						} 	
 
 
-						} 									
-					}
-					else if (iResult == 0)
-					{
-						printf("\nRazgovor s %d. klijentom zavrsen.\n", i+1);
-						closesocket(clientSockets[i]);
-
-						for (int j = i; j < index - 1; j++)
-							clientSockets[j] = clientSockets[j + 1];
-
-						clientSockets[index - 1] = 0;
-						index--;
+						printf("\nTrenutne lokacije vozaca, nakon slanja poruke klijentu: \n");
+						ShowDrivers(theFirst);
 					}
 					else
 					{
-						printf("recv failed, error: %d\n", WSAGetLastError());
+						if (iResult == 0)
+							printf("\nRazgovor s klijentom zavrsen.\n");
+						else
+							printf("recv failed, error: %d\n", WSAGetLastError());
+
+
 						closesocket(clientSockets[i]);
 
 						for (int j = i; j < index - 1; j++)
 							clientSockets[j] = clientSockets[j + 1];
 
 						clientSockets[index - 1] = 0;
-						index--;
+						index--; 
 					}
 
-			
-				}			
+				}	
+				
 			}			
 		}
 	}
+
+	closesocket(listenClientsSocket);
+	WSACleanup();
 }
 
 
@@ -331,13 +327,7 @@ void ServiceToClients()
 
 DWORD WINAPI CheckClientAndDrivers(LPVOID lpParam)
 {
-
-	driver* first = (driver*)malloc(sizeof(driver));
-	int* minutes = (int*)malloc(sizeof(int));
-	ServiceToClients(/*&first, &minutes*/);
-
-
-	//DriversMessage(first->ID, *minutes);
+	ServiceToClients();
 
 	return 0;
 }
@@ -354,7 +344,6 @@ int main()
 
 	printf("Pocetak smene, vozaci se prijavljuju na stajalistu.\n\n");
 	ShowDrivers(firstDriver);
-	getchar();
 	
 
 	DWORD check;

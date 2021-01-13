@@ -41,6 +41,7 @@ typedef struct taxidriver
 } driver;
 
 
+
 char* RandomLocation()
 {
 	char *ret = (char*)malloc(9 * sizeof(char));
@@ -277,6 +278,7 @@ void Answer(char* serviceToClient)
 
 void ClientsMessage(int ID)
 {
+
 	SOCKET connectSocket = INVALID_SOCKET;
 	int iResult;
 
@@ -303,20 +305,26 @@ void ClientsMessage(int ID)
 		WSACleanup();
 	}
 
-
-
+		printf("\n %d. klijent: \n", ID);
 		char *loc = RandomLocation();
 		printf("Dobar dan. Moze li jedno vozilo na %s? \n", loc);
-		iResult = send(connectSocket, loc, (int)strlen(loc) + 1, 0);
+	iResult = send(connectSocket, loc, (int)strlen(loc) + 1, 0);
 	
-
-
 	if (iResult == SOCKET_ERROR)
 	{
 		printf("send failed, error: %d\n", WSAGetLastError());
 		closesocket(connectSocket);
 		WSACleanup();
 		return;
+	}
+
+
+	iResult = shutdown(connectSocket, SD_BOTH);
+	if (iResult == SOCKET_ERROR) 
+	{
+		printf("Shutdown failed with error: %d\n", WSAGetLastError());
+		closesocket(connectSocket);
+		WSACleanup();
 	}
 
 	closesocket(connectSocket);

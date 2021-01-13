@@ -96,18 +96,25 @@ void AnswerFromService()
 	}
 
 
-
+	closesocket(listenSocket);
 }
 
 
+
+HANDLE hSemaphores[2];
+
 DWORD WINAPI ClientToService(LPVOID lpParam)
 {
-	int id = *(int*)lpParam;
-	printf("\n %d. klijent: \n", id);
-
-	ClientsMessage(id);
-	AnswerFromService();
-
+	for (int i = 0; i < 2; i++) 
+	{
+		if (i == (int)lpParam)
+		{
+			WaitForSingleObject(hSemaphores[i], INFINITE);
+				ClientsMessage(i+1);
+				AnswerFromService();
+			ReleaseSemaphore(hSemaphores[i +1], 1, NULL);
+		}
+	}
 
 	return 0;
 }
@@ -116,21 +123,41 @@ int main()
 {
 
 	DWORD request1, request2;
-	HANDLE hRequest, hRequest2;
+	HANDLE hRequest1, hRequest2;
 
-	int id1 = 1;
-	int id2 = 2;
+	hRequest1 = NULL;
+	hRequest2 = NULL;	
 
-	hRequest = CreateThread(NULL, 0, &ClientToService, &id1, 0, &request1);
-	//Sleep(60000);
-	//hRequest2 = CreateThread(NULL, 0, &ClientToService, &id2, 0, &request2);
+	hSemaphores[0] = CreateSemaphore(0, 1, 1, NULL);
+	hSemaphores[1] = CreateSemaphore(0, 0, 1, NULL);
 
-	CloseHandle(hRequest);
-//	CloseHandle(hRequest2);
 
-	//Sleep(5000);
+	if(hSemaphores[0])
+		hRequest1 = CreateThread(NULL, 0, &ClientToService, (LPVOID)0, 0, &request1);
+
+	Sleep(10000);
+
+	if(hSemaphores[1])
+		hRequest2 = CreateThread(NULL, 0, &ClientToService, (LPVOID)1, 0, &request2);
+
+
+
+
+	if (hRequest1)
+		CloseHandle(hRequest1);
+
+	if (hRequest2)
+		CloseHandle(hRequest2);
+
+	if (hSemaphores[0])
+		CloseHandle(hSemaphores[0]);
+
+	if (hSemaphores[1])
+		CloseHandle(hSemaphores[1]);
+
+
+
 	getchar();
-
 
 	return 0;
 }

@@ -16,14 +16,22 @@ DWORD WINAPI DriversAnswer(LPVOID lpParam)
 
 int main()
 {
-	DWORD answer;
-	HANDLE hAnswer;
+	DWORD answer1, answer2;
+	HANDLE hAnswer1, hAnswer2;
 
 
-	hAnswer = CreateThread(NULL, 0, &DriversAnswer, NULL, 0, &answer);
-	CloseHandle(hAnswer);
+	hAnswer1 = CreateThread(NULL, 0, &DriversAnswer, NULL, 0, &answer1);
+	CloseHandle(hAnswer1);
 
-	Sleep(5000);
+	//getchar();
+	Sleep(12000);
+
+	hAnswer2 = CreateThread(NULL, 0, &DriversAnswer, NULL, 0, &answer2);
+	CloseHandle(hAnswer2);
+
+	getchar();
+
+
 
 	return 0;
 }
