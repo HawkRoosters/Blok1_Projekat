@@ -231,3 +231,27 @@ HANDLE* GetSemaphore()
 {
 	return &driverSemaphore;
 }
+
+
+void ShowDrivers(driver *first)
+{
+	driver *temp = first;
+
+	if (temp == NULL)
+		printf("Nema vozaca.\n");
+	else
+	{
+		do
+		{
+			printf("ID: %d\n", temp->ID);
+			if (temp->available)
+				printf("slobodan \n");
+			else
+				printf("zauzet \n");
+			printf("na lokaciji: (%d,%d)\n", temp->loc.x, temp->loc.y);
+			temp = temp->next;
+
+			printf("\n");
+		} while (temp != NULL);
+	}
+}
