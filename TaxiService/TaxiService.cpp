@@ -1,7 +1,9 @@
 // TaxiService.cpp : This file contains the 'main' function. Program execution begins and ends there.
 
 
-#include "TCPfunctions.h"
+
+#include "TCP.h"
+#include "Functions.h"
 
 void ShowDrivers(driver *first)
 {
@@ -219,7 +221,8 @@ void ServiceToClients()
 				}
 
 				index++;
-				printf("Uspostavljena veza sa %d. kljentom. \n", index);
+				printf("\nUspostavljena veza sa %d. kljentom. \n", index);
+				Sleep(2000);
 			}
 		}
 		else 
@@ -233,9 +236,8 @@ void ServiceToClients()
 					{
 						buffer[iResult] = '\0';
 						printf("\nNovi klijent se javlja sa: %s\n",  buffer); 						
-
 						printf("\nTaxi service trazi trenutne lokacije vozaca... \n");
-
+						Sleep(2000);
 
 						driver* theFirst = (driver*)malloc(sizeof(driver));
 						driver* theDriver = (driver*)malloc(sizeof(driver));
@@ -245,11 +247,12 @@ void ServiceToClients()
 
 						printf("\nTrenutne lokacije vozaca: \n");
 						ShowDrivers(theFirst);
+						Sleep(2000);
 
 						loc = GetLocation(buffer);
 						printf("Lokacija kojoj trazim najblizu, : (%d,%d)\n", loc.x, loc.y);
 						Find(theFirst, loc, &min, &theDriver);
-				
+
 
 						if (theDriver == NULL) 
 						{
@@ -284,16 +287,16 @@ void ServiceToClients()
 							Answer(answer);
 						} 	
 
-
+						Sleep(2000);
 						printf("\nTrenutne lokacije vozaca, nakon slanja poruke klijentu: \n");
 						ShowDrivers(theFirst);
 					}
 					else
 					{
-						if (iResult == 0)
+						/*if (iResult == 0)
 							printf("\nRazgovor s klijentom zavrsen.\n");
-						else
-							printf("recv failed, error: %d\n", WSAGetLastError());
+						else 
+							printf("recv failed, error: %d\n", WSAGetLastError()); */
 
 
 						closesocket(clientSockets[i]);
